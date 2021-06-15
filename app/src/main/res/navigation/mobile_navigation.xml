@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_cursos">
+
+    <fragment
+        android:id="@+id/nav_cursos"
+        android:name="com.videoteca.teacher.ui.cursos.CursosFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_cursos" />
+
+    <fragment
+        android:id="@+id/nav_subir"
+        android:name="com.videoteca.teacher.ui.subir.SubirFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/fragment_subir" />
+
+    <fragment
+        android:id="@+id/nav_about"
+        android:name="com.videoteca.teacher.ui.about.AboutFragment"
+        android:label="@string/menu_slideshow"
+        tools:layout="@layout/fragment_about" />
+</navigation>
