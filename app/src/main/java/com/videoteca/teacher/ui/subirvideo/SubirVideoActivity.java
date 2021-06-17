@@ -6,60 +6,145 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
+import com.google.gson.Gson;
 import com.videoteca.teacher.R;
+import com.videoteca.teacher.data.model.realm.CursoData;
+import com.videoteca.teacher.data.model.realm.SessionData;
+import com.videoteca.teacher.data.model.retrofit.Video;
+import com.videoteca.teacher.managers.SessionManager;
 
+import java.io.File;
 import java.util.Objects;
 
-public class SubirVideoActivity extends AppCompatActivity {
-    private ActionBar actionBar;
+import io.realm.Realm;
 
+public class SubirVideoActivity extends AppCompatActivity {
+    private Realm realm;
+    private Context context;
+    private String authorization;
+    private ActionBar actionBar;
+    private SessionManager sessionManager;
+    private SubirVideoViewModel subirVideoViewModel;
+
+    Video video;
+
+    TextView nombreCurso;
     Button seleccionarVideo;
+    TextView textoUrlVideo;
+    VideoView videoView;
+
+    EditText tituloVideo;
+    EditText descripcionVideo;
+
+    Button registrarVideo;
+    Button cancelarRegistro;
+
+    CursoData curso = new CursoData();
+
+    private File videoFile;
 
     private static final int CODIGO_VIDEO_GALERIA = 100;
     private static final int CODIGO_VIDEO_CAMARA = 101;
     private static final int CODIGO_REQUERIDO_CAMARA = 102;
 
     private String [] cameraPermissions;
-    private Uri videoUri; // Uri del video seleccionado
+    private Uri videoUri = null; // Uri del video seleccionado
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subir_video);
-
+        context = this;
         // Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         actionBar = getSupportActionBar();
-        actionBar.setTitle("Subir Video a Curso");
+        actionBar.setTitle("Subir Video");
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
 
+
         cameraPermissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
+        subirVideoViewModel = new ViewModelProvider(this, new SubirVideoViewModelFactory()).get(SubirVideoViewModel.class);
+
+
+        nombreCurso = (TextView) findViewById(R.id.txtNombreCurso);
         seleccionarVideo = findViewById(R.id.btnUploadVideo);
+        textoUrlVideo = findViewById(R.id.txtVideoPath);
+        videoView = findViewById(R.id.videoSeleccionado);
+
+        tituloVideo = findViewById(R.id.tituloVideo);
+        descripcionVideo = findViewById(R.id.descripcionVideo);
+
+        registrarVideo = findViewById(R.id.btnRegistrarVideo);
+        cancelarRegistro = findViewById(R.id.btnCancelarRegistro);
+
+
 
         seleccionarVideo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                videoPickDialog();
             }
         });
+
+        registrarVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                video = new Video();
+                video.setId(0);
+                video.setTitulo(tituloVideo.getText().toString());
+                video.setDescripcion(descripcionVideo.getText().toString());
+                video.setEstado(1);
+                video.setIdCurs(curso.getId());
+                video.setPathVideo("");
+                video.setVideo(videoFile);
+
+                subirVideoViewModel.subirVideoPorCurso(SubirVideoActivity.this,authorization, video);
+            }
+        });
+        // Instancia de Session Manager
+        sessionManager = new SessionManager(getApplicationContext());
+        //Get realm instance
+        realm = Realm.getDefaultInstance();
+        //Get data session Realm
+        SessionData sessionData = realm.where(SessionData.class).findFirst();
+        authorization = sessionData.getToken();
+        this.obtenerDataCurso();
+    }
+
+    private void obtenerDataCurso(){
+        Bundle data = getIntent().getExtras();
+        if (data != null) {
+            Gson gson = new Gson();
+            curso = gson.fromJson(data.getString("CURSO_JSON"), CursoData.class);
+            actionBar.setTitle("Agregar nuevo video");
+
+            this.nombreCurso.setText(curso.getNombre());
+        }
     }
 
     private void videoPickDialog(){
@@ -107,6 +192,25 @@ public class SubirVideoActivity extends AppCompatActivity {
         startActivityForResult(intent, CODIGO_VIDEO_CAMARA);
     }
 
+    private void setVideoToVideoView(){
+        textoUrlVideo.setText(videoUri.toString());
+        MediaController mediaController = new MediaController(this);
+        mediaController.setAnchorView(videoView);
+
+        videoFile = new File(videoUri.toString());
+        // Colocamos media controller en el video view
+        videoView.setMediaController(mediaController);
+        // Colocamos la uri del video
+        videoView.setVideoURI(videoUri);
+        videoView.requestFocus();
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                videoView.pause();
+            }
+        });
+    }
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
@@ -135,9 +239,11 @@ public class SubirVideoActivity extends AppCompatActivity {
         if(resultCode == RESULT_OK){
             if (requestCode == CODIGO_VIDEO_GALERIA){
                 videoUri = data.getData();
+                setVideoToVideoView();
 
             } else if (requestCode == CODIGO_VIDEO_CAMARA){
                 videoUri = data.getData();
+                setVideoToVideoView();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);

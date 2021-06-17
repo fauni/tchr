@@ -3,6 +3,8 @@ package com.videoteca.teacher.data.model.retrofit;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.File;
+
 public class Video {
 
     @SerializedName("id")
@@ -41,6 +43,9 @@ public class Video {
     @SerializedName("updated_at")
     @Expose
     private String updatedAt;
+    @SerializedName("video")
+    @Expose
+    private File video;
 
     public int getId() {
         return id;
@@ -138,4 +143,11 @@ public class Video {
         this.updatedAt = updatedAt;
     }
 
+    public File getVideo() {
+        return video;
+    }
+
+    public void setVideo(File video) {
+        this.video = video;
+    }
 }

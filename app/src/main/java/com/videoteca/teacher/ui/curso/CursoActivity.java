@@ -51,6 +51,8 @@ public class CursoActivity extends AppCompatActivity {
     private String authorization;
     private RealmResults videoResults;
 
+    CursoData curso = new CursoData();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +70,7 @@ public class CursoActivity extends AppCompatActivity {
         if (data != null) {
             Gson gson = new Gson();
             CursoData cursoData = gson.fromJson(data.getString("CURSO_JSON"), CursoData.class);
+            curso = gson.fromJson(data.getString("CURSO_JSON"), CursoData.class);
             getSupportActionBar().setTitle(cursoData.getNombre());
         } else {
             finish();
@@ -149,6 +152,7 @@ public class CursoActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(context, SubirVideoActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("CURSO_JSON", new Gson().toJson(curso));
                 context.startActivity(intent);
             }
         });
