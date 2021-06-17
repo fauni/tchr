@@ -208,6 +208,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull @NotNull MenuItem item) {
+
         // Handle navigation view item clicks here.
         boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
 

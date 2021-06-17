@@ -12,9 +12,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.videoteca.teacher.R;
+import com.videoteca.teacher.ui.subirvideo.SubirVideoActivity;
 import com.videoteca.teacher.ui.video.VideoActivity;
 import com.videoteca.teacher.data.model.realm.CursoData;
 import com.videoteca.teacher.data.model.realm.SessionData;
@@ -32,6 +36,7 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 public class CursoActivity extends AppCompatActivity {
+    private FloatingActionButton fabUploadVideo;
 
     private RecyclerView videoRecyclerView;
     private VideoAdapter videoAdapter;
@@ -75,6 +80,8 @@ public class CursoActivity extends AppCompatActivity {
         realm = Realm.getDefaultInstance();
 
         videoRecyclerView = findViewById(R.id.video_recycler_view);
+
+        fabUploadVideo = findViewById(R.id.upload_video_btn);
 
         //Get data session Realm
         SessionData sessionData = realm.where(SessionData.class).findFirst();
@@ -132,6 +139,17 @@ public class CursoActivity extends AppCompatActivity {
             @Override
             public void onChanged(List<Video> videos) {
                 prepareVideos(videos);
+            }
+        });
+
+        fabUploadVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Subir Video", Toast.LENGTH_LONG).show();
+
+                Intent intent = new Intent(context, SubirVideoActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
             }
         });
     }
