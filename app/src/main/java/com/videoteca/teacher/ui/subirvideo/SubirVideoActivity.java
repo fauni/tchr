@@ -15,10 +15,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -49,6 +51,8 @@ public class SubirVideoActivity extends AppCompatActivity {
     private SubirVideoViewModel subirVideoViewModel;
 
     Video video;
+    private String videoPath;
+    private Uri videoUri = null; // Uri del video seleccionado
 
     TextView nombreCurso;
     Button seleccionarVideo;
@@ -64,13 +68,20 @@ public class SubirVideoActivity extends AppCompatActivity {
     CursoData curso = new CursoData();
 
     private File videoFile;
+    File choosedFile;
 
     private static final int CODIGO_VIDEO_GALERIA = 100;
     private static final int CODIGO_VIDEO_CAMARA = 101;
     private static final int CODIGO_REQUERIDO_CAMARA = 102;
 
     private String [] cameraPermissions;
-    private Uri videoUri = null; // Uri del video seleccionado
+
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +96,7 @@ public class SubirVideoActivity extends AppCompatActivity {
         actionBar.setDisplayHomeAsUpEnabled(true);
 
 
-
+        verifyStoragePermissions(this);
         cameraPermissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
         subirVideoViewModel = new ViewModelProvider(this, new SubirVideoViewModelFactory()).get(SubirVideoViewModel.class);
@@ -120,10 +131,10 @@ public class SubirVideoActivity extends AppCompatActivity {
                 video.setDescripcion(descripcionVideo.getText().toString());
                 video.setEstado(1);
                 video.setIdCurs(curso.getId());
-                video.setPathVideo("");
+                video.setPathVideo(videoPath);
                 video.setVideo(videoFile);
 
-                subirVideoViewModel.subirVideoPorCurso(SubirVideoActivity.this,authorization, video);
+                subirVideoViewModel.subirVideoPorCurso(SubirVideoActivity.this,authorization, video, videoUri);
             }
         });
         // Instancia de Session Manager
@@ -193,11 +204,11 @@ public class SubirVideoActivity extends AppCompatActivity {
     }
 
     private void setVideoToVideoView(){
-        textoUrlVideo.setText(videoUri.toString());
+        textoUrlVideo.setText(videoUri.getPath());
         MediaController mediaController = new MediaController(this);
         mediaController.setAnchorView(videoView);
 
-        videoFile = new File(videoUri.toString());
+        videoFile = new File(videoUri.getPath());
         // Colocamos media controller en el video view
         videoView.setMediaController(mediaController);
         // Colocamos la uri del video
@@ -236,19 +247,49 @@ public class SubirVideoActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
         if(resultCode == RESULT_OK){
             if (requestCode == CODIGO_VIDEO_GALERIA){
                 videoUri = data.getData();
+                videoPath = getPath(videoUri);
                 setVideoToVideoView();
 
             } else if (requestCode == CODIGO_VIDEO_CAMARA){
                 videoUri = data.getData();
+                videoPath = getPath(videoUri);
                 setVideoToVideoView();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Video.Media.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
+            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } else
+            return null;
+    }
+
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
     /*
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {

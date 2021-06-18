@@ -101,6 +101,7 @@
                 android:textStyle="bold" />
             <EditText
                 android:id="@+id/tituloVideo"
+                android:text="Titulo 1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
             <TextView
@@ -111,6 +112,7 @@
                 android:textStyle="bold" />
             <EditText
                 android:id="@+id/descripcionVideo"
+                android:text="Descripcion 1"
                 android:inputType="textMultiLine"
                 android:minLines="3"
                 android:layout_width="match_parent"

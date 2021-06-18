@@ -1,6 +1,7 @@
 package com.videoteca.teacher.ui.subirvideo;
 
 import android.app.Activity;
+import android.net.Uri;
 
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
@@ -27,8 +28,8 @@ public class SubirVideoViewModel extends ViewModel {
         return videoResult;
     }
 
-    public void subirVideoPorCurso(Activity activity, String authorization, Video video){
-        videoRepository.saveUploadVideo(video, authorization).observe((LifecycleOwner) activity, new Observer<ResponseGeneric>() {
+    public void subirVideoPorCurso(Activity activity, String authorization, Video video, Uri uri){
+        videoRepository.saveUploadVideo(video, uri, authorization).observe((LifecycleOwner) activity, new Observer<ResponseGeneric>() {
             @Override
             public void onChanged(ResponseGeneric responseGeneric) {
                 videoResult.setValue(responseGeneric);
